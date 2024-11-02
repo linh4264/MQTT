@@ -1,47 +1,50 @@
-name: Build DLL for MQTTnet
+name: Build DLL from Zip Source
 
-# Thiết lập sự kiện kích hoạt workflow, ví dụ, mỗi khi có thay đổi ở nhánh main
 on:
+  workflow_dispatch: # Cho phép khởi động workflow thủ công hoặc khi push
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
-# Định nghĩa các job sẽ chạy trong workflow
 jobs:
   build:
-    # Cài đặt môi trường (Ubuntu, nhưng có thể chọn Windows hoặc MacOS nếu cần)
     runs-on: ubuntu-latest
 
-    # Các bước trong quy trình build
     steps:
-      # Bước 1: Checkout mã nguồn
+      # Bước 1: Checkout mã nguồn từ repository (nếu có)
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Bước 2: Cài đặt .NET SDK (phiên bản phù hợp với thư viện, ví dụ .NET 5.0)
+      # Bước 2: Tải file .zip từ repository (hoặc từ nguồn khác nếu cần)
+      - name: Download Source Zip
+        run: wget https://example.com/source.zip -O source.zip
+        # Hoặc: `uses: actions/download-artifact@v2` nếu file .zip đã được lưu trong Artifacts
+
+      # Bước 3: Giải nén file .zip
+      - name: Unzip Source Files
+        run: unzip source.zip -d source
+
+      # Bước 4: Thiết lập môi trường .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: '5.0.x'  # Chọn phiên bản .NET phù hợp với dự án
 
-      # Bước 3: Khôi phục các package cần thiết
+      # Bước 5: Khôi phục các thư viện phụ thuộc (dependencies)
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore source
 
-      # Bước 4: Build dự án và tạo file .dll
-      - name: Build project
-        run: dotnet build -c Release --no-restore
+      # Bước 6: Build dự án để tạo file .dll
+      - name: Build Project
+        run: dotnet build source -c Release --no-restore
 
-      # Bước 5: Tạo file .dll trong thư mục output
+      # Bước 7: Xuất file .dll vào thư mục output
       - name: Publish DLL
-        run: dotnet publish -c Release -o ./output
+        run: dotnet publish source -c Release -o ./output
 
-      # Bước 6: Lưu trữ file .dll dưới dạng Artifact để tải về
-      - name: Upload Artifact
+      # Bước 8: Lưu file .dll dưới dạng Artifact
+      - name: Upload DLL as Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: MQTTnet-DLL
+          name: Built-DLL
           path: ./output
