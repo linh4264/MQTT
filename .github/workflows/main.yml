@@ -15,7 +15,7 @@ jobs:
     steps:
       # Bước 1: Checkout mã nguồn từ repository
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Bước 2: Giải nén file MQTTnet-4.3.7.1207.zip
       - name: Unzip Source Files
